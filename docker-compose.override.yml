@@ -1,0 +1,173 @@
+version: '3.8'
+services:
+ catalogdb:
+  container_name: catalogdb
+  restart: always
+  ports:
+   - "27017:27017"
+  volumes:
+   - catalogdb_volume:/data/db
+ basketdb:
+  container_name: basketdb
+  restart: always
+  ports:
+   - "6379:6379"
+ discountdb:
+  container_name: discountdb
+  restart: always
+  ports:
+   - "5432:5432"
+  volumes:
+   - discountdb_volume:/var/lib/postgresql/data
+  environment:
+   - POSTGRES_USER=admin
+   - POSTGRES_PASSWORD=Kembel0603t?
+   - POSTGRES_DB=discountdb
+ identitydb:
+  container_name: identitydb
+  restart: always
+  user: root
+  ports:
+   - "1433:1433"
+  volumes:
+   - identitydb_volume:/var/opt/mssql
+  environment:
+   - ACCEPT_EULA=Y
+   - SA_PASSWORD=Kembel0603t?
+ orderdb:
+  container_name: orderdb
+  restart: always
+  user: root
+  ports:
+   - "1444:1433"
+  volumes:
+   - orderdb_volume:/var/opt/mssql
+  environment:
+   - ACCEPT_EULA=Y
+   - SA_PASSWORD=Kembel0603t?
+ rabbitmq:
+  container_name: rabbitmq
+  restart: always
+  ports:
+   - "5672:5672"
+   - "15672:15672"
+ catalog.api:
+  container_name: catalog.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - RabbitMQUrl=rabbitmq
+   - IdentityServerUrl=http://identityserver.api
+   - DatabaseSettings:ConnectionString=mongodb://catalogdb:27017
+   - ConsulConfig:Address=http://consul:8500
+   - ConsulConfig:ServiceAddress= http://catalog.api
+  ports:
+   - "5011:80"
+  depends_on:
+   - catalogdb
+   - rabbitmq
+ identityserver.api:
+  container_name: identityserver.api
+  restart: on-failure
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - ConnectionStrings:DefaultConnection=Server=identitydb,1433;Database=identitydb;User=sa;Password=Kembel0603t?
+  ports:
+   - "5001:80"
+  depends_on:
+   - identitydb
+ basket.api:
+  container_name: basket.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - RabbitMQUrl=rabbitmq
+   - IdentityServerUrl=http://identityserver.api
+   - RedisSettings:Host=basketdb
+   - RedisSettings:Port=6379
+   - ConsulConfig:Address=http://consul:8500
+   - ConsulConfig:ServiceAddress= http://basket.api
+  ports:
+   - "5013:80"
+  depends_on:
+   - basketdb
+   - rabbitmq
+ photostock.api:
+  container_name: photostock.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - IdentityServerUrl=http://identityserver.api
+   - ConsulConfig:Address=http://consul:8500
+   - ConsulConfig:ServiceAddress= http://photostock.api
+  ports:
+   - "5012:80"
+  volumes:
+   - type: bind
+     source: D:\Çalışmalar\MicroServisProjeler\UdemyMicroservices\Services\PhotoStock\FreeCourse.Services.PhotoStock\wwwroot\photos
+     target: /app/wwwroot/photos
+ discount.api:
+  container_name: discount.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - IdentityServerUrl=http://identityserver.api
+   - ConnectionStrings:PostgreSql=User ID=admin; Password=Kembel0603t?;Server=discountdb;Port=5432;Database=discountdb;Integrated Security=true;Pooling=true;
+   - ConsulConfig:Address=http://consul:8500
+   - ConsulConfig:ServiceAddress= http://discount.api
+  ports:
+   - "5014:80"
+  depends_on:
+   - discountdb
+ payment.api:
+  container_name: payment.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - IdentityServerUrl=http://identityserver.api
+   - RabbitMQUrl=rabbitmq
+   - ConsulConfig:Address=http://consul:8500
+   - ConsulConfig:ServiceAddress= http://payment.api
+  ports:
+   - "5016:80"
+  depends_on:
+   - rabbitmq
+ order.api:
+  container_name: order.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - IdentityServerUrl=http://identityserver.api
+   - RabbitMQUrl=rabbitmq
+   - ConnectionStrings:DefaultConnection=Server=orderdb,1433;Database=orderdb;User=sa;Password=Kembel0603t?
+   - ConsulConfig:Address=http://consul:8500
+   - ConsulConfig:ServiceAddress= http://order.api
+  ports:
+   - "5015:80"
+  depends_on:
+   - orderdb
+   - rabbitmq
+ gateway.api:
+  container_name: gateway.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Production
+   - IdentityServerUrl=http://identityserver.api
+  ports:
+   - "5000:80"  
+ client.api:
+  container_name: client.api
+  environment: 
+   - ASPNETCORE_ENVIRONMENT=Development
+   - ServiceApiSettings:IdentityBaseUrl=http://identityserver.api
+   - ServiceApiSettings:GatewayBaseUrl=http://gateway.api
+  ports:
+   - "5010:80" 
+  depends_on:
+   - catalog.api
+   - identityserver.api 
+   - basket.api
+   - photostock.api
+   - discount.api
+   - payment.api
+   - order.api
+   - gateway.api
+ consul:
+  container_name: consul
+  ports:
+   - "8500:8500"
+   - "8600:8600/tcp"
+   - "8600:8600/udp"

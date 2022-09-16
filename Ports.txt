@@ -1,0 +1,11 @@
+Web => 5010
+Gateway => 5000
+IdentityServer =>5001
+Services
+ CatalogApi => 5011
+ PhotoStockApi => 5012
+ BasketApi => 5013
+ Discount => 5014
+ OrderApi => 5015
+ Payment => 5016
+ Stock => 5018
