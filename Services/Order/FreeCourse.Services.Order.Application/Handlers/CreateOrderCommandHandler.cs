@@ -8,21 +8,23 @@ using Mass = MassTransit;
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
+using FreeCourse.Shared.Settings;
+using FreeCourse.Shared.EventsContract;
 
 namespace FreeCourse.Services.Order.Application.Handlers
 {
     public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Response<CreatedOrderDto>>
     {
-        private readonly IOrderRepository orderRepository;
-        private readonly Mass.IPublishEndpoint publishEndpoint;
+        private readonly IOrderRepository _orderRepository;
+        private readonly Mass.ISendEndpointProvider _sendEndpointProvider;
 
-
-        public CreateOrderCommandHandler(IOrderRepository orderRepository, Mass.IPublishEndpoint publishEndpoint)
+        public CreateOrderCommandHandler(IOrderRepository orderRepository, Mass.ISendEndpointProvider sendEndpointProvider)
         {
-            this.orderRepository = orderRepository;
-            this.publishEndpoint = publishEndpoint;
+            _orderRepository = orderRepository;
+            _sendEndpointProvider = sendEndpointProvider;
         }
-        
+
+
         public async Task<Response<CreatedOrderDto>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
             Address address = new(request.Address.Province, request.Address.District, request.Address.Street, request.Address.ZipCode, request.Address.Line);
@@ -34,11 +36,11 @@ namespace FreeCourse.Services.Order.Application.Handlers
                 order.AddOrderItem(x.ProductId, x.ProductName, x.Price, x.PictureUrl, x.Count);
             });
 
-            await orderRepository.CreateAsync(order);
+            await _orderRepository.CreateAsync(order);
 
-            var orderCreatedEvet = new OrderCreatedEvent
+            var orderCreatedRequestEvent = new OrderCreatedRequestEvent
             {
-                BuyerID = request.BuyerId,
+                BuyerId = request.BuyerId,
                 OrderId = order.Id,
                 Payment = new PaymentMessage
                 {
@@ -52,7 +54,7 @@ namespace FreeCourse.Services.Order.Application.Handlers
 
             request.OrderItems.ForEach(x =>
             {
-                orderCreatedEvet.OrderItems.Add(new OrderItemMessage
+                orderCreatedRequestEvent.OrderItems.Add(new OrderItemMessage
                 {
                     Count = x.Count,
                     ProductId = x.ProductId,
@@ -62,7 +64,9 @@ namespace FreeCourse.Services.Order.Application.Handlers
                 });
             });
 
-            await publishEndpoint.Publish(orderCreatedEvet);
+            var sendEndPoint =await _sendEndpointProvider.GetSendEndpoint(new System.Uri($"queue:{RabbitMQSettingsConst.OrderQueueName}"));
+
+            await sendEndPoint.Send<IOrderCreatedRequestEvent>(orderCreatedRequestEvent);
 
             return Response<CreatedOrderDto>.Success(new CreatedOrderDto { OrderId = order.Id }, 200);
 
