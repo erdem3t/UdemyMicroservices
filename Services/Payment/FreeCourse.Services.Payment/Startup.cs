@@ -1,6 +1,4 @@
-using FreeCourse.Services.Payment.Consumers;
 using FreeCourse.Services.Payment.Extensions;
-using FreeCourse.Shared.Settings;
 using MassTransit;
 using MassTransit.MultiBus;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -34,18 +32,12 @@ namespace FreeCourse.Services.Payment
 
             services.AddMassTransit(x =>
             {
-                x.AddConsumer<StockReservedEventConsumer>();
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(Configuration["RabbitMQUrl"], "/", host =>
                     {
                         host.Username("guest");
                         host.Password("guest");
-                    });
-
-                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.StockReservedEventQueueName, e =>
-                    {
-                        e.ConfigureConsumer<StockReservedEventConsumer>(context);
                     });
                 });
             });

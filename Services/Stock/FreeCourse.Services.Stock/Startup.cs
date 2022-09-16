@@ -1,21 +1,12 @@
-using FreeCourse.Services.Stock.Consumer;
 using FreeCourse.Services.Stock.Model;
-using FreeCourse.Shared.Settings;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FreeCourse.Services.Stock
 {
@@ -33,24 +24,12 @@ namespace FreeCourse.Services.Stock
         {
             services.AddMassTransit(x =>
             {
-                x.AddConsumer<OrderCreatedEventConsumer>();
-                x.AddConsumer<PaymentFailedEventConsumer>();
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(Configuration["RabbitMQUrl"], "/", host =>
                     {
                         host.Username("guest");
                         host.Password("guest");
-                    });
-
-                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.StockOrderCreatedEventQueueName, e =>
-                    {
-                        e.ConfigureConsumer<OrderCreatedEventConsumer>(context);
-                    });
-
-                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.StockPaymentFailedEventQueueName, e =>
-                    {
-                        e.ConfigureConsumer<PaymentFailedEventConsumer>(context);
                     });
                 });
             });
