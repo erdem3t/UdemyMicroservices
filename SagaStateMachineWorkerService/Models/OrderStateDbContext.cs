@@ -11,6 +11,7 @@ namespace SagaStateMachineWorkerService.Models
         {
         }
 
+        // OderStateInstance tablosunun alanlarına kural koyabilmemiz için Configuration tarafında OrderStateMap sınıfını oluşturduk
         protected override IEnumerable<ISagaClassMap> Configurations { get { yield return new OrderStateMap(); } }
     }
 }
