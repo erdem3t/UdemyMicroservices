@@ -1,4 +1,6 @@
+using FreeCourse.Services.Stock.Consumer;
 using FreeCourse.Services.Stock.Model;
+using FreeCourse.Shared.Settings;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,12 +26,18 @@ namespace FreeCourse.Services.Stock
         {
             services.AddMassTransit(x =>
             {
+                x.AddConsumer<OrderCreatedEventConsumer>();
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(Configuration["RabbitMQUrl"], "/", host =>
                     {
                         host.Username("guest");
                         host.Password("guest");
+                    });
+
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.StockOrderCreatedEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<OrderCreatedEventConsumer>(context);
                     });
                 });
             });
