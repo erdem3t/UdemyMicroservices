@@ -5,7 +5,7 @@ using System;
 
 namespace SagaStateMachineWorkerService.Models
 {
-    public class OrderStateMachine:MassTransitStateMachine<OrderStateInstance>
+    public class OrderStateMachine : MassTransitStateMachine<OrderStateInstance>
     {
         public Event<IOrderCreatedRequestEvent> OrderCreatedRequestEvent { get; set; }
 
@@ -33,14 +33,13 @@ namespace SagaStateMachineWorkerService.Models
                      {
                          Console.WriteLine($"OrderCreatedRequestEvent before : {context.Instance}");
                      })
+                     .Publish(context => new OrderCreatedEvent(context.Instance.CorrelationId) { OrderItems = context.Data.OrderItems })
                      .TransitionTo(OrderCreated)
                      .Then(context =>
                      {
                          Console.WriteLine($"OrderCreatedRequestEvent after : {context.Instance}");
                      })
                      );
-
-        
         }
     }
 }

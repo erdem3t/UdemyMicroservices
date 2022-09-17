@@ -6,4 +6,8 @@
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="MassTransit" Version="7.1.7" />
+	</ItemGroup>
 </Project>
