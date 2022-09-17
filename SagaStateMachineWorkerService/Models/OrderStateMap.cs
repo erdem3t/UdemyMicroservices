@@ -10,6 +10,7 @@ namespace SagaStateMachineWorkerService.Models
         protected override void Configure(EntityTypeBuilder<OrderStateInstance> entity, ModelBuilder model)
         {
             entity.Property(x => x.BuyyerId).HasMaxLength(256);
+            entity.Property(x => x.TotalPrice).HasColumnType("decimal(18,2)");
         }
 
     }
