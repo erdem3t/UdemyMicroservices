@@ -27,6 +27,7 @@ namespace FreeCourse.Services.Stock
             services.AddMassTransit(x =>
             {
                 x.AddConsumer<OrderCreatedEventConsumer>();
+                x.AddConsumer<PaymentFailedRequestEventConsumer>();
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(Configuration["RabbitMQUrl"], "/", host =>
@@ -38,6 +39,10 @@ namespace FreeCourse.Services.Stock
                     cfg.ReceiveEndpoint(RabbitMQSettingsConst.StockOrderCreatedEventQueueName, e =>
                     {
                         e.ConfigureConsumer<OrderCreatedEventConsumer>(context);
+                    });
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.PaymentFailedRequestEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<PaymentFailedRequestEventConsumer>(context);
                     });
                 });
             });

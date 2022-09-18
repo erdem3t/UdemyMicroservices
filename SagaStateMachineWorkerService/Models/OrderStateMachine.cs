@@ -113,6 +113,8 @@ namespace SagaStateMachineWorkerService.Models
                           Console.WriteLine($"PaymentFailedEvent after : {context.Instance}");
                       })
                      );
+
+            SetCompletedWhenFinalized();
         }
     }
 }
