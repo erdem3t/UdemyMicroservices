@@ -12,11 +12,15 @@ namespace SagaStateMachineWorkerService.Models
 
         public Event<IStockReservedEvent> StockReservedEvent { get; set; }
 
+        public Event<IStockNotReservedEvent> StockNotReservedEvent { get; set; }
+
         public Event<IPaymentCompletedEvent> PaymentCompletedEvent { get; set; }
 
         public State OrderCreated { get; private set; }
 
         public State StockReserved { get; private set; }
+
+        public State StockNotReserved { get; private set; }
 
         public State PaymentCompleted { get; private set; }
 
@@ -27,6 +31,8 @@ namespace SagaStateMachineWorkerService.Models
             Event(() => OrderCreatedRequestEvent, y => y.CorrelateById<int>(x => x.OrderId, z => z.Message.OrderId).SelectId(context => Guid.NewGuid()));
 
             Event(() => StockReservedEvent, x => x.CorrelateById(y => y.Message.CorrelationId));
+
+            Event(() => StockNotReservedEvent, x => x.CorrelateById(y => y.Message.CorrelationId));
 
             Event(() => PaymentCompletedEvent, x => x.CorrelateById(y => y.Message.CorrelationId));
 
@@ -74,19 +80,22 @@ namespace SagaStateMachineWorkerService.Models
                      .Then(context =>
                       {
                           Console.WriteLine($"StockReservedEvent after : {context.Instance}");
-                      })
+                      }),
+                     When(StockNotReservedEvent)
+                     .TransitionTo(StockNotReserved)
+                     .Publish(context => new OrderRequestFailedEvent { OrderId = context.Instance.OrderId, Reason = context.Data.Reason })
                      );
 
             During(StockReserved,
                      When(PaymentCompletedEvent)
                      .TransitionTo(PaymentCompleted)
-                     .Publish(context=>new OrderRequestCompletedEvent { OrderId = context.Instance.OrderId})
+                     .Publish(context => new OrderRequestCompletedEvent { OrderId = context.Instance.OrderId })
                      .Then(context =>
                       {
-                           Console.WriteLine($"PaymentCompletedEvent after : {context.Instance}");
+                          Console.WriteLine($"PaymentCompletedEvent after : {context.Instance}");
                       })
+                     .Finalize()
                      );
-
         }
     }
 }

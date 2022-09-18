@@ -3,6 +3,7 @@ using FreeCourse.Services.Order.Application.Consumers;
 using FreeCourse.Services.Order.Extensions;
 using FreeCourse.Services.Order.Infrastructure;
 using FreeCourse.Shared.Services;
+using FreeCourse.Shared.Settings;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -36,6 +37,7 @@ namespace FreeCourse.Services.Order
             {
                 x.AddConsumer<CreateOrderMessageCommandConsumer>();
                 x.AddConsumer<CourseNameChangeEventConsumer>();
+                x.AddConsumer<OrderRequestCompletedEventConsumer>();
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
@@ -51,6 +53,10 @@ namespace FreeCourse.Services.Order
                     cfg.ReceiveEndpoint("course-name-changed-event-order-service", e =>
                     {
                         e.ConfigureConsumer<CourseNameChangeEventConsumer>(context);
+                    });
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderRequestCompletedEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<OrderRequestCompletedEventConsumer>(context);
                     });
                 });
             });

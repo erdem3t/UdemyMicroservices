@@ -8,5 +8,7 @@ namespace FreeCourse.Shared.Settings
         public const string StockOrderCreatedEventQueueName = "stock-order-created-event-queue";
 
         public const string PaymentStockReservedEventQueueName = "payment-stock-reserved-event-queue";
+
+        public const string OrderRequestCompletedEventQueueName = "order-request-completed-event-queue";
     }
 }
