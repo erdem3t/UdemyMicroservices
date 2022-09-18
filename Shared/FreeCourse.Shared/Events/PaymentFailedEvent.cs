@@ -1,22 +1,21 @@
 ﻿using FreeCourse.Shared.EventsContract;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace FreeCourse.Shared.Events
 {
-    public class StockReservedRequestPayment : IStockReservedRequestPayment
+    public class PaymentFailedEvent : IPaymentFailedEvent
     {
-        public StockReservedRequestPayment(Guid correlationId)
+        public PaymentFailedEvent(Guid correlationId)
         {
             CorrelationId = correlationId;
         }
 
-        public PaymentMessage Payment { get; set; }
+        public string Reason { get; set; }
 
         public List<OrderItemMessage> OrderItems { get; set; }
 
         public Guid CorrelationId { get; }
-
-        public string BuyerId { get; set; }
     }
 }

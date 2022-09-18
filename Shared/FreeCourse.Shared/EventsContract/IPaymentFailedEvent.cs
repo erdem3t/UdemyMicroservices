@@ -2,15 +2,14 @@
 using MassTransit;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace FreeCourse.Shared.EventsContract
 {
-    public interface IStockReservedRequestPayment : CorrelatedBy<Guid>
+    public interface IPaymentFailedEvent : CorrelatedBy<Guid>
     {
-        public PaymentMessage Payment { get; set; }
+        public string Reason { get; set; }
 
         public List<OrderItemMessage> OrderItems { get; set; }
-
-        public string BuyerId { get; set; }
     }
 }
