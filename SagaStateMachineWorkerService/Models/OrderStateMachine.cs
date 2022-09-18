@@ -16,6 +16,8 @@ namespace SagaStateMachineWorkerService.Models
 
         public Event<IPaymentCompletedEvent> PaymentCompletedEvent { get; set; }
 
+        public Event<IPaymentFailedEvent> PaymentFailedEvent { get; set; }
+
         public State OrderCreated { get; private set; }
 
         public State StockReserved { get; private set; }
@@ -23,6 +25,8 @@ namespace SagaStateMachineWorkerService.Models
         public State StockNotReserved { get; private set; }
 
         public State PaymentCompleted { get; private set; }
+
+        public State PaymentFailed { get; private set; }
 
         public OrderStateMachine()
         {
@@ -84,6 +88,10 @@ namespace SagaStateMachineWorkerService.Models
                      When(StockNotReservedEvent)
                      .TransitionTo(StockNotReserved)
                      .Publish(context => new OrderRequestFailedEvent { OrderId = context.Instance.OrderId, Reason = context.Data.Reason })
+                     .Then(context =>
+                     {
+                         Console.WriteLine($"StockNotReservedEvent after : {context.Instance}");
+                     })
                      );
 
             During(StockReserved,
@@ -94,7 +102,16 @@ namespace SagaStateMachineWorkerService.Models
                       {
                           Console.WriteLine($"PaymentCompletedEvent after : {context.Instance}");
                       })
-                     .Finalize()
+                     .Finalize(),
+                     When(PaymentFailedEvent)
+                     .Publish(context => new OrderRequestFailedEvent { OrderId = context.Instance.OrderId, Reason = context.Data.Reason })
+                     .Send(new Uri($"queue:{RabbitMQSettingsConst.PaymentFailedRequestEventQueueName}"), context =>
+                           new PaymentFailedRequestStock { OrderItems = context.Data.OrderItems })
+                     .TransitionTo(PaymentFailed)
+                     .Then(context =>
+                      {
+                          Console.WriteLine($"PaymentFailedEvent after : {context.Instance}");
+                      })
                      );
         }
     }

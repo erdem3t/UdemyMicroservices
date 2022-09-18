@@ -38,6 +38,7 @@ namespace FreeCourse.Services.Order
                 x.AddConsumer<CreateOrderMessageCommandConsumer>();
                 x.AddConsumer<CourseNameChangeEventConsumer>();
                 x.AddConsumer<OrderRequestCompletedEventConsumer>();
+                x.AddConsumer<OrderRequestFailedEventConsumer>();
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
@@ -57,6 +58,10 @@ namespace FreeCourse.Services.Order
                     cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderRequestCompletedEventQueueName, e =>
                     {
                         e.ConfigureConsumer<OrderRequestCompletedEventConsumer>(context);
+                    });
+                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderRequestFailedEventQueueName, e =>
+                    {
+                        e.ConfigureConsumer<OrderRequestFailedEventConsumer>(context);
                     });
                 });
             });
