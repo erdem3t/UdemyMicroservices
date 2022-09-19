@@ -37,9 +37,6 @@ namespace FreeCourse.Services.Order
             {
                 x.AddConsumer<CreateOrderMessageCommandConsumer>();
                 x.AddConsumer<CourseNameChangeEventConsumer>();
-                x.AddConsumer<PaymentCompletedEventConsumer>();
-                x.AddConsumer<PaymentFailedEventConsumer>();
-                x.AddConsumer<StockNotReservedEventConsumer>();
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
@@ -55,18 +52,6 @@ namespace FreeCourse.Services.Order
                     cfg.ReceiveEndpoint("course-name-changed-event-order-service", e =>
                     {
                         e.ConfigureConsumer<CourseNameChangeEventConsumer>(context);
-                    });
-                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderPaymentCompletedEventQueueName, e =>
-                    {
-                        e.ConfigureConsumer<PaymentCompletedEventConsumer>(context);
-                    });
-                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.OrderPaymentFailedEventQueueName, e =>
-                    {
-                        e.ConfigureConsumer<PaymentFailedEventConsumer>(context);
-                    });
-                    cfg.ReceiveEndpoint(RabbitMQSettingsConst.StockNotReservedEventQueueName, e =>
-                    {
-                        e.ConfigureConsumer<StockNotReservedEventConsumer>(context);
                     });
                 });
             });
